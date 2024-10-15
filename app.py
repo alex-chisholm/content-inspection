@@ -1,10 +1,11 @@
 from shiny import App, ui, render, reactive
 import urllib3
 import json
-import openai
-import os 
-# Replace with your actual OpenAI API key
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+from openai import OpenAI
+import os
+
+# Initialize the OpenAI client
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 app_ui = ui.page_fluid(
     ui.panel_title("GitHub Code Analyzer"),
@@ -45,7 +46,7 @@ def server(input, output, session):
             Please format your response as JSON with keys: 'content_type', 'language', and 'dependencies'.
             """
 
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a code analysis assistant."},
@@ -53,7 +54,7 @@ def server(input, output, session):
                 ]
             )
 
-            return json.loads(response.choices[0].message['content'])
+            return json.loads(response.choices[0].message.content)
         return None
 
     @output
