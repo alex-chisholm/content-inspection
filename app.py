@@ -63,10 +63,10 @@ def server(input, output, session):
         if input.analyze():
             result = analyze_code()
             if result:
-                output = f"Content Type: {result['content_type']}\n"
-                output += f"Language: {result['language']}\n\n"
+                output = f"Content Type: {result.get('content_type', 'Unknown')}\n"
+                output += f"Language: {result.get('language', 'Unknown')}\n\n"
                 output += "Dependencies:\n"
-                output += result['dependencies']
+                output += str(result.get('dependencies', 'No dependencies found'))
                 return output
             else:
                 return "Failed to analyze the code. Please check the GitHub link and try again."
