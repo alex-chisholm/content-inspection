@@ -1,6 +1,10 @@
 from shiny import App, ui, render, reactive
 import urllib3
-import re
+import json
+import openai
+
+# Replace with your actual OpenAI API key
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 app_ui = ui.page_fluid(
     ui.panel_title("GitHub Code Analyzer"),
@@ -29,29 +33,27 @@ def server(input, output, session):
     def analyze_code():
         content = fetch_github_content()
         if content:
-            # Basic analysis without using OpenAI
-            if "library(shiny)" in content or "ui <- " in content:
-                content_type = "Shiny"
-                language = "R"
-                dependencies = "manifest.json:\n{\n  \"dependencies\": {\n    \"shiny\": \"*\"\n  }\n}"
-            elif "import streamlit" in content:
-                content_type = "Streamlit"
-                language = "Python"
-                dependencies = "requirements.txt:\nstreamlit"
-            elif "from shiny import" in content:
-                content_type = "Shiny"
-                language = "Python"
-                dependencies = "requirements.txt:\nshiny"
-            else:
-                content_type = "Unknown"
-                language = "Python" if ".py" in input.github_link() else "R"
-                dependencies = "Unable to determine dependencies"
+            prompt = f"""Analyze the following code and provide:
+            1. The type of content (e.g., Streamlit or Shiny)
+            2. The main language (R or Python)
+            3. If it's R, provide a generated manifest.json dependency file
+            4. If it's Python, provide a generated requirements.txt file
 
-            return {
-                "content_type": content_type,
-                "language": language,
-                "dependencies": dependencies
-            }
+            Code:
+            {content}
+
+            Please format your response as JSON with keys: 'content_type', 'language', and 'dependencies'.
+            """
+
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a code analysis assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            return json.loads(response.choices[0].message['content'])
         return None
 
     @output
