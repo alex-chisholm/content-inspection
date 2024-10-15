@@ -2,7 +2,7 @@ from shiny import App, ui, render, reactive
 import urllib3
 import json
 import openai
-
+import os 
 # Replace with your actual OpenAI API key
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
